@@ -1,23 +1,38 @@
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:autocomplete_google_places_widget/src/helper/debouncer.dart';
+import 'package:autocomplete_google_places_widget/src/helpers/debouncer.dart';
 import 'package:autocomplete_google_places_widget/src/models/place_autocomplete_response.dart';
 import 'package:autocomplete_google_places_widget/src/models/predicition.dart';
 import 'package:autocomplete_google_places_widget/src/services/google_places_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-/// Flutter code sample for [Autocomplete] that demonstrates fetching the
-/// options asynchronously and debouncing the network calls, including handling
-/// network errors.
-
+/// A widget that uses the Google Places API to provide places suggestions.
+/// The user can select an option from the suggestions, and the selected
+/// option will be passed to the [onOptionSelected] callback.
+/// The options menu can be customized using the [menuBuilder] and
+/// [menuOptionBuilder] parameters.
 class GPlacesAutoComplete extends StatefulWidget {
   /// The Google API key to use for the Places API.
   final String googleAPIKey;
 
   /// A callback that is called when the user selects an option.
-  final void Function(Prediction)? onItemSelected;
+  final void Function(Prediction)? onOptionSelected;
+
+  /// A builder for the options view.
+  final Widget Function(
+      BuildContext context,
+      AutocompleteOnSelected<Prediction> onSelected,
+      Iterable<Prediction> options)? menuBuilder;
+
+  /// A builder for a single option view in the menu.
+  final Widget Function(BuildContext context, int index, Prediction prediction)?
+      menuOptionBuilder;
+
+  /// The time (in milliseconds) to wait after the user stops typing
+  /// to make the API request.
+  final int debounceTime;
 
   /// A builder for the field decoration. If not provided, a default
   /// decoration will be used. [isSearching] is true when the field is
@@ -26,15 +41,7 @@ class GPlacesAutoComplete extends StatefulWidget {
   final InputDecoration Function(bool isSearching, bool isAPIException)?
       fieldDecorationBuilder;
 
-  /// A builder for the menu tile.
-  final Widget Function(BuildContext context, Prediction prediction)?
-      menuTileBuilder;
-
-  /// The time (in milliseconds) to wait after the user stops typing
-  ///  to make the API request.
-  final int debounceTime;
-
-  /// The countries to restrict the search to.
+  /// The countries to restrict the search to (two-character region code).
   final List<String>? countries;
 
   /// The maximum height of the options menu.
@@ -52,20 +59,12 @@ class GPlacesAutoComplete extends StatefulWidget {
   /// The shape of the menu.
   final double menuBorderRadius;
 
-  /// If true, the menu tile will be dense.
-  final bool denseMenuTile;
-
-  ///  The icon to use for the menu.
-  final Widget? menuTileIcon;
-
-  /// A builder for the options view.
-  final Widget Function(
-      BuildContext context,
-      AutocompleteOnSelected<Prediction> onSelected,
-      Iterable<Prediction> options)? optionsViewBuilder;
+  /// If true, the menu option will be dense.
+  final bool denseMenuOption;
 
   /// If true, the predictions history will be saved in shared preferences
-  final bool enablePredictionsHistory;
+  /// and will be displayed in the options menu when the current query is empty
+  final bool enableHistory;
 
   /// if True, The prediction saved will contain only the `placeId`, `description` and `LatLng` (if available)
   final bool liteModeHistory;
@@ -73,18 +72,17 @@ class GPlacesAutoComplete extends StatefulWidget {
   const GPlacesAutoComplete({
     super.key,
     required this.googleAPIKey,
-    this.onItemSelected,
-    this.menuTileBuilder,
+    this.onOptionSelected,
+    this.menuOptionBuilder,
     this.debounceTime = 500,
     this.countries,
     this.optionsMaxHeight = 275,
     this.optionsMaxWidth,
     this.fieldDecorationBuilder,
-    this.optionsViewBuilder,
-    this.enablePredictionsHistory = false,
+    this.menuBuilder,
+    this.enableHistory = false,
     this.liteModeHistory = false,
-    this.denseMenuTile = true,
-    this.menuTileIcon,
+    this.denseMenuOption = true,
     this.menuColor,
     this.menuElevation = 2.0,
     this.menuBorderRadius = 8.0,
@@ -131,7 +129,7 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
 
   List<Prediction> _predictionsHistory = [];
   Future<void> getPredictionsHistory() async {
-    if (!widget.enablePredictionsHistory) {
+    if (!widget.enableHistory) {
       return;
     }
     _predictionsHistory =
@@ -140,7 +138,7 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
   }
 
   void addPredictionToHistoryCallBack(Prediction prediction) {
-    if (!widget.enablePredictionsHistory) {
+    if (!widget.enableHistory) {
       return;
     }
     if (_predictionsHistory.contains(prediction)) {
@@ -200,6 +198,7 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
         );
       },
       optionsBuilder: (TextEditingValue textEditingValue) async {
+        log('textEditingValue: ${textEditingValue.text}');
         if (textEditingValue.text.isEmpty) {
           return _predictionsHistory;
         }
@@ -212,8 +211,8 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
         return options;
       },
       optionsViewBuilder: (context, onSelected, options) {
-        if (widget.optionsViewBuilder != null) {
-          return widget.optionsViewBuilder!.call(context, onSelected, options);
+        if (widget.menuBuilder != null) {
+          return widget.menuBuilder!.call(context, onSelected, options);
         }
         return Align(
           alignment: Alignment.topLeft,
@@ -242,12 +241,12 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
                           Scrollable.ensureVisible(context, alignment: 0.5);
                         }, debugLabel: 'AutocompleteOptions.ensureVisible');
                       }
-                      return widget.menuTileBuilder
-                              ?.call(context, prediction) ??
+                      return widget.menuOptionBuilder
+                              ?.call(context, index, prediction) ??
                           ListTile(
                             onTap: () {
                               onSelected(prediction);
-                              widget.onItemSelected?.call(prediction);
+                              widget.onOptionSelected?.call(prediction);
                               addPredictionToHistoryCallBack(prediction);
                             },
                             tileColor:
@@ -261,8 +260,7 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
                                       ? widget.menuBorderRadius
                                       : 0.0),
                             )),
-                            leading: widget.menuTileIcon,
-                            dense: widget.denseMenuTile,
+                            dense: widget.denseMenuOption,
                             title: Text(_displayStringForPredicition(
                                 options.elementAt(index))),
                           );
