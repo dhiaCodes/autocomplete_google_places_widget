@@ -46,7 +46,7 @@ And you are good to go!
 The `GPlacesAutoComplete` widget has several parameters that you can use.
 
 ```dart
-/// The Google API key to use for the Places API.
+  /// The Google API key to use for the Places API.
   final String googleAPIKey;
 
   /// A callback that is called when the user selects an option.
@@ -102,6 +102,6 @@ The `GPlacesAutoComplete` widget has several parameters that you can use.
   final bool liteModeHistory;
 ```
 
-## Additional information
+## Feedback
 
 Please feel free to give me [any feedback](https://github.com/dhiaCodes/autocomplete_google_places_widget/issues) helping support this package!
