@@ -15,13 +15,15 @@ and the Flutter guide for
 
 
 A wrapper around Flutter’s default Autocomplete widget that leverages the Google Places API to provide real-time place suggestions as users type.
+<img src="https://github.com/dhiaCodes/autocomplete_google_places_widget/blob/main/images/pub_dev_preview.png" width="100%" alt="Package Preview" />
+
 
 ## Features
 
-* 🎨 Highly Customizable: Offers extensive customization options to fit your specific needs.
-* 🕒 History Support: Includes history support for quick access to previous search results.
-* 💳 Session Tokens: Uses session tokens to group user queries in a single session ensuring efficient billing.
-* ⏳ Debounce: Implements a debounce mechanism to reduce the frequency of API calls.
+* 🎨 **Highly Customizable**: Offers extensive customization options to fit your specific needs.
+* 🕒 **History Support**: Includes history support for quick access to previous search results.
+* 💳 **Session Tokens**: Uses session tokens to group user queries in a single session ensuring efficient billing.
+* ⏳ **Debounce**: Implements a debounce mechanism to reduce the frequency of API calls.
 
 ## Getting started
 
@@ -94,11 +96,11 @@ The `GPlacesAutoComplete` widget has several parameters that you can use.
   /// If true, the menu option will be dense.
   final bool denseMenuOption;
 
-  /// If true, the predictions history will be saved in shared preferences
+  /// If true, the prediction history will be saved in shared preferences
   /// and will be displayed in the options menu when the current query is empty
   final bool enableHistory;
 
-  /// if True, The prediction saved will contain only the `placeId`, `description` and `LatLng` (if available)
+  /// If True, The prediction saved will contain only the `placeId`, `description`, and `LatLng` (if available)
   final bool liteModeHistory;
 ```
 
