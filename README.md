@@ -15,7 +15,7 @@ and the Flutter guide for
 
 
 A wrapper around Flutter’s default Autocomplete widget that leverages the Google Places API to provide real-time place suggestions as users type.
-<img src="https://github.com/dhiaCodes/autocomplete_google_places_widget/blob/main/images/pub_dev_preview.png" width="100%" alt="Package Preview" />
+<img src="https://raw.githubusercontent.com/dhiaCodes/autocomplete_google_places_widget/38abfd4a7b1e101f892b28ca6913d2736fd8f1dd/images/pub_dev_preview.png" width="100%" alt="Package Preview" />
 
 
 ## Features
