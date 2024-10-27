@@ -1,17 +1,6 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages).
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages).
--->
-
-
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/dhiaCodes/autocomplete_google_places_widget)
+![Pub Points](https://img.shields.io/pub/points/autocomplete_google_places_widget)
 
 
 A wrapper around Flutter’s default Autocomplete widget that leverages the Google Places API to provide real-time place suggestions as users type.
@@ -107,3 +96,9 @@ The `GPlacesAutoComplete` widget has several parameters that you can use.
 ## Feedback
 
 Please feel free to give me [any feedback](https://github.com/dhiaCodes/autocomplete_google_places_widget/issues) helping support this package!
+
+<a href="https://github.com/dhiaCodes/autocomplete_google_places_widget/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=dhiaCodes/autocomplete_google_places_widget" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
