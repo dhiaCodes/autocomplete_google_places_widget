@@ -33,6 +33,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final _yourGoogleAPIKey = ''; // fill with your Google API Key
 
+  final TextEditingController _textEditingController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -44,16 +47,26 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Center(
-              child: GPlacesAutoComplete(
-            googleAPIKey: _yourGoogleAPIKey,
-            countries: const ['FR'],
-            onItemSelected: (p0) => log('onItemSelected: ${p0.description}'),
-            enablePredictionsHistory: true,
-            liteModeHistory: true,
-            menuTileIcon: const Icon(
-              Icons.location_on,
+            child: Column(
+              children: [
+                TextButton(
+                    onPressed: () {
+                      _textEditingController.clear();
+                    },
+                    child: const Text('Clear')),
+                GPlacesAutoComplete(
+                  googleAPIKey: _yourGoogleAPIKey,
+                  textEditingController: _textEditingController,
+                  focusNode: _focusNode,
+                  countries: const ['FR'],
+                  onOptionSelected: (option) =>
+                      log('onOptionSelected: ${option.description}'),
+                  enableHistory: true,
+                  liteModeHistory: true,
+                ),
+              ],
             ),
-          )),
+          ),
         ),
       ),
     );
