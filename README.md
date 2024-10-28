@@ -53,6 +53,15 @@ The `GPlacesAutoComplete` widget has several parameters that you can use.
   final Widget Function(BuildContext context, int index, Prediction prediction)?
       menuOptionBuilder;
 
+  /// The controller for the text field.
+  /// If this parameter is not null, then [focusNode] must also be not null.
+  final TextEditingController? textEditingController;
+
+  /// The focus node for the text field.
+  /// If this parameter is not null, then [textEditingController] must also be
+  /// not null.
+  final FocusNode? focusNode;
+
   /// The time (in milliseconds) to wait after the user stops typing
   /// to make the API request.
   final int debounceTime;
@@ -85,11 +94,11 @@ The `GPlacesAutoComplete` widget has several parameters that you can use.
   /// If true, the menu option will be dense.
   final bool denseMenuOption;
 
-  /// If true, the prediction history will be saved in shared preferences
+  /// If true, the predictions history will be saved in shared preferences
   /// and will be displayed in the options menu when the current query is empty
   final bool enableHistory;
 
-  /// If True, The prediction saved will contain only the `placeId`, `description`, and `LatLng` (if available)
+  /// if True, The prediction saved will contain only the `placeId`, `description` and `LatLng` (if available)
   final bool liteModeHistory;
 ```
 
