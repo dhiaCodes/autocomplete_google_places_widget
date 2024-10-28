@@ -30,6 +30,15 @@ class GPlacesAutoComplete extends StatefulWidget {
   final Widget Function(BuildContext context, int index, Prediction prediction)?
       menuOptionBuilder;
 
+  /// The controller for the text field.
+  /// If this parameter is not null, then [focusNode] must also be not null.
+  final TextEditingController? textEditingController;
+
+  /// The focus node for the text field.
+  /// If this parameter is not null, then [textEditingController] must also be
+  /// not null.
+  final FocusNode? focusNode;
+
   /// The time (in milliseconds) to wait after the user stops typing
   /// to make the API request.
   final int debounceTime;
@@ -74,6 +83,8 @@ class GPlacesAutoComplete extends StatefulWidget {
     required this.googleAPIKey,
     this.onOptionSelected,
     this.menuOptionBuilder,
+    this.textEditingController,
+    this.focusNode,
     this.debounceTime = 500,
     this.countries,
     this.optionsMaxHeight = 275,
@@ -86,7 +97,7 @@ class GPlacesAutoComplete extends StatefulWidget {
     this.menuColor,
     this.menuElevation = 2.0,
     this.menuBorderRadius = 8.0,
-  });
+  }) : assert((focusNode == null) == (textEditingController == null));
 
   @override
   State<GPlacesAutoComplete> createState() => _GPlacesAutoCompleteState();
@@ -105,6 +116,9 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
   // Calls the "remote" API to search with the given query. Returns null when
   // the call has been made obsolete.
   Future<Iterable<Prediction>?> _search(String query) async {
+    if (query.isEmpty) {
+      return _predictionsHistory;
+    }
     if (_lastPredicitons.contains(Prediction(description: query))) {
       return _lastPredicitons;
     }
@@ -169,7 +183,9 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
   @override
   Widget build(BuildContext context) {
     double defaultFieldAndMenuWidth = MediaQuery.sizeOf(context).width * 0.9;
-    return Autocomplete<Prediction>(
+    return RawAutocomplete<Prediction>(
+      textEditingController: widget.textEditingController,
+      focusNode: widget.focusNode,
       displayStringForOption: _displayStringForPredicition,
       fieldViewBuilder: (BuildContext context, TextEditingController controller,
           FocusNode focusNode, VoidCallback onFieldSubmitted) {
@@ -198,10 +214,6 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
         );
       },
       optionsBuilder: (TextEditingValue textEditingValue) async {
-        log('textEditingValue: ${textEditingValue.text}');
-        if (textEditingValue.text.isEmpty) {
-          return _predictionsHistory;
-        }
         final Iterable<Prediction>? options =
             await _debouncedSearch(textEditingValue.text);
         if (options == null) {
