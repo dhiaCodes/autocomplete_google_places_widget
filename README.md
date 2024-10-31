@@ -43,6 +43,18 @@ The `GPlacesAutoComplete` widget has several parameters that you can use.
   /// A callback that is called when the user selects an option.
   final void Function(Prediction)? onOptionSelected;
 
+  /// A builder for the text field used to input search queries.
+  /// If not provided, a default text field will be used.
+  ///
+  /// Ensure using the provided [TextEditingController], [FocusNode] and [onFieldSubmitted] callback
+  /// to make the widget work properly. Check the package example for more details.
+  ///
+  /// Note: You should not use your own TextEditingController and FocusNode with the [textFormFieldBuilder], instead you can use
+  /// the provided TextEditingController and FocusNode provided in [GPlacesAutoComplete] widget.
+  final Widget Function(
+          BuildContext, TextEditingController, FocusNode, void Function())?
+      textFormFieldBuilder;
+
   /// A builder for the options view.
   final Widget Function(
       BuildContext context,
@@ -65,13 +77,6 @@ The `GPlacesAutoComplete` widget has several parameters that you can use.
   /// The time (in milliseconds) to wait after the user stops typing
   /// to make the API request.
   final int debounceTime;
-
-  /// A builder for the field decoration. If not provided, a default
-  /// decoration will be used. [isSearching] is true when the field is
-  /// currently searching for options, and [isAPIException] is true when
-  /// an error occurred while searching for options.
-  final InputDecoration Function(bool isSearching, bool isAPIException)?
-      fieldDecorationBuilder;
 
   /// The countries to restrict the search to (two-character region code).
   final List<String>? countries;
@@ -100,6 +105,40 @@ The `GPlacesAutoComplete` widget has several parameters that you can use.
 
   /// if True, The prediction saved will contain only the `placeId`, `description` and `LatLng` (if available)
   final bool liteModeHistory;
+
+  /// A callback that is called when the widget is searching for options.
+  /// This can be used to show a loading indicator.
+  ///
+  /// Example:
+  /// ```dart
+  /// loadingCallback: (bool loading) {
+  ///  if (loading) {
+  ///   setState(() {
+  ///   _yourLoadingVariable = true;
+  ///  });
+  /// } else {
+  ///  setState(() {
+  ///  _yourLoadingVariable = false;
+  /// });
+  /// }
+  final void Function(bool loading)? loadingCallback;
+
+  /// A callback that is called when an API exception occurs.
+  /// This can be used to show an error message.
+  ///
+  /// Example:
+  /// ```dart
+  /// apiExceptionCallback: (bool apiException) {
+  ///  if (apiException) {
+  ///   setState(() {
+  ///  _yourErrorMsgVariable = "An error occurred while searching for places".
+  ///  });
+  /// } else {
+  ///  setState(() {
+  /// _yourErrorMsgVariable = null;
+  /// });
+  /// }
+  final void Function(bool apiExceptionCallback)? apiExceptionCallback;
 ```
 
 ## Feedback
@@ -109,5 +148,3 @@ Please feel free to give me [any feedback](https://github.com/dhiaCodes/autocomp
 <a href="https://github.com/dhiaCodes/autocomplete_google_places_widget/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=dhiaCodes/autocomplete_google_places_widget" />
 </a>
-
-Made with [contrib.rocks](https://contrib.rocks).
