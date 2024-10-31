@@ -20,6 +20,18 @@ class GPlacesAutoComplete extends StatefulWidget {
   /// A callback that is called when the user selects an option.
   final void Function(Prediction)? onOptionSelected;
 
+  /// A builder for the text field used to input search queries.
+  /// If not provided, a default text field will be used.
+  ///
+  /// Ensure using the provided [TextEditingController], [FocusNode] and [onFieldSubmitted] callback
+  /// to make the widget work properly. Check the package example for more details.
+  ///
+  /// Note: You should not use your own TextEditingController and FocusNode with the [textFormFieldBuilder], instead you can use
+  /// the provided TextEditingController and FocusNode provided in [GPlacesAutoComplete] widget.
+  final Widget Function(
+          BuildContext, TextEditingController, FocusNode, void Function())?
+      textFormFieldBuilder;
+
   /// A builder for the options view.
   final Widget Function(
       BuildContext context,
@@ -42,13 +54,6 @@ class GPlacesAutoComplete extends StatefulWidget {
   /// The time (in milliseconds) to wait after the user stops typing
   /// to make the API request.
   final int debounceTime;
-
-  /// A builder for the field decoration. If not provided, a default
-  /// decoration will be used. [isSearching] is true when the field is
-  /// currently searching for options, and [isAPIException] is true when
-  /// an error occurred while searching for options.
-  final InputDecoration Function(bool isSearching, bool isAPIException)?
-      fieldDecorationBuilder;
 
   /// The countries to restrict the search to (two-character region code).
   final List<String>? countries;
@@ -78,26 +83,64 @@ class GPlacesAutoComplete extends StatefulWidget {
   /// if True, The prediction saved will contain only the `placeId`, `description` and `LatLng` (if available)
   final bool liteModeHistory;
 
-  const GPlacesAutoComplete({
-    super.key,
-    required this.googleAPIKey,
-    this.onOptionSelected,
-    this.menuOptionBuilder,
-    this.textEditingController,
-    this.focusNode,
-    this.debounceTime = 500,
-    this.countries,
-    this.optionsMaxHeight = 275,
-    this.optionsMaxWidth,
-    this.fieldDecorationBuilder,
-    this.menuBuilder,
-    this.enableHistory = false,
-    this.liteModeHistory = false,
-    this.denseMenuOption = true,
-    this.menuColor,
-    this.menuElevation = 2.0,
-    this.menuBorderRadius = 8.0,
-  }) : assert((focusNode == null) == (textEditingController == null));
+  /// A callback that is called when the widget is searching for options.
+  /// This can be used to show a loading indicator.
+  ///
+  /// Example:
+  /// ```dart
+  /// loadingCallback: (bool loading) {
+  ///  if (loading) {
+  ///   setState(() {
+  ///   _yourLoadingVariable = true;
+  ///  });
+  /// } else {
+  ///  setState(() {
+  ///  _yourLoadingVariable = false;
+  /// });
+  /// }
+  final void Function(bool loading)? loadingCallback;
+
+  /// A callback that is called when an API exception occurs.
+  /// This can be used to show an error message.
+  ///
+  /// Example:
+  /// ```dart
+  /// apiExceptionCallback: (bool apiException) {
+  ///  if (apiException) {
+  ///   setState(() {
+  ///  _yourErrorMsgVariable = "An error occurred while searching for places".
+  ///  });
+  /// } else {
+  ///  setState(() {
+  /// _yourErrorMsgVariable = null;
+  /// });
+  /// }
+  final void Function(bool apiExceptionCallback)? apiExceptionCallback;
+
+  /// Creates a new Google Places Autocomplete widget.
+  /// The [googleAPIKey] parameter is required.
+  const GPlacesAutoComplete(
+      {super.key,
+      required this.googleAPIKey,
+      this.onOptionSelected,
+      this.menuOptionBuilder,
+      this.textEditingController,
+      this.focusNode,
+      this.debounceTime = 500,
+      this.countries,
+      this.optionsMaxHeight = 275,
+      this.optionsMaxWidth,
+      this.textFormFieldBuilder,
+      this.menuBuilder,
+      this.enableHistory = false,
+      this.liteModeHistory = false,
+      this.denseMenuOption = true,
+      this.menuColor,
+      this.menuElevation = 2.0,
+      this.menuBorderRadius = 8.0,
+      this.loadingCallback,
+      this.apiExceptionCallback})
+      : assert((focusNode == null) == (textEditingController == null));
 
   @override
   State<GPlacesAutoComplete> createState() => _GPlacesAutoCompleteState();
@@ -191,26 +234,17 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
           FocusNode focusNode, VoidCallback onFieldSubmitted) {
         return SizedBox(
           width: widget.optionsMaxWidth ?? defaultFieldAndMenuWidth,
-          child: TextFormField(
-            decoration: widget.fieldDecorationBuilder
-                    ?.call(_isSearching, _apiException) ??
-                _defaultInputDecoration().copyWith(
-                  errorText: _apiException
-                      ? 'An error occurred while searching for places.'
-                      : null,
-                  prefixIcon: _isSearching
-                      ? Transform.scale(
-                          scale: 0.5,
-                          child: const CircularProgressIndicator(),
-                        )
-                      : null,
+          child: widget.textFormFieldBuilder != null
+              ? widget.textFormFieldBuilder!
+                  .call(context, controller, focusNode, onFieldSubmitted)
+              : TextFormField(
+                  decoration: _defaultInputDecoration(),
+                  controller: controller,
+                  focusNode: focusNode,
+                  onFieldSubmitted: (_) {
+                    onFieldSubmitted();
+                  },
                 ),
-            controller: controller,
-            focusNode: focusNode,
-            onFieldSubmitted: (_) {
-              onFieldSubmitted();
-            },
-          ),
         );
       },
       optionsBuilder: (TextEditingValue textEditingValue) async {
@@ -287,33 +321,25 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
     );
   }
 
-  bool _isSearching = false;
-  bool _apiException = false;
-
   Future<Iterable<Prediction>> _insertPredicitions(String query) async {
     if (query == '') {
       return const Iterable<Prediction>.empty();
     }
+    widget.apiExceptionCallback?.call(false);
+
     try {
-      setState(() {
-        _isSearching = true;
-      });
+      widget.loadingCallback?.call(true);
       PlaceAutocompleteResponse response =
           await GooglePlacesService.fetchPlaces(query, widget.googleAPIKey,
               countries: widget.countries);
 
-      log('response length: ${response.predictions?.length}');
       return response.predictions ?? [];
     } on Exception {
-      setState(() {
-        _apiException = true;
-      });
+      widget.apiExceptionCallback?.call(true);
 
       return [];
     } finally {
-      setState(() {
-        _isSearching = false;
-      });
+      widget.loadingCallback?.call(false);
     }
   }
 
