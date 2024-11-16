@@ -1,3 +1,7 @@
+## 1.0.1
+
+* Added prediction model export
+
 ## 1.0.0
 
 * Breaking change: Removed `fieldDecorationBuilder`. Use `textFormFieldBuilder` for better control over the text field.
