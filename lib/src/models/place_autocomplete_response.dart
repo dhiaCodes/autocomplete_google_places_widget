@@ -1,4 +1,4 @@
-import 'predicition.dart';
+import 'prediction.dart';
 
 class PlaceAutocompleteResponse {
   List<Prediction>? predictions;

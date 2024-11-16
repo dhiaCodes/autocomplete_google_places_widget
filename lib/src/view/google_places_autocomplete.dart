@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:autocomplete_google_places_widget/src/helpers/debouncer.dart';
 import 'package:autocomplete_google_places_widget/src/models/place_autocomplete_response.dart';
-import 'package:autocomplete_google_places_widget/src/models/predicition.dart';
+import 'package:autocomplete_google_places_widget/src/models/prediction.dart';
 import 'package:autocomplete_google_places_widget/src/services/google_places_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';

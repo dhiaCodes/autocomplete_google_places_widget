@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/place_autocomplete_response.dart';
-import '../models/predicition.dart';
+import '../models/prediction.dart';
 
 class GooglePlacesService {
   static String? sessionToken;
