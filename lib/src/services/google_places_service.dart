@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:autocomplete_google_places_widget/src/models/place_details.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -72,8 +73,33 @@ class GooglePlacesService {
       subscriptionResponse = PlaceAutocompleteResponse.fromJson(response.data);
     }
 
-    log("getLocation: $subscriptionResponse");
     return subscriptionResponse;
+  }
+
+  static Future<Prediction> getPlaceDetailsFromPlaceId(
+    Prediction prediction,
+    String googleAPIKey, {
+    String? proxyURL,
+  }) async {
+    try {
+      final prefix = proxyURL ?? "";
+      final Dio dio = Dio();
+
+      final url =
+          "${prefix}https://maps.googleapis.com/maps/api/place/details/json?placeid=${prediction.placeId}&key=$googleAPIKey";
+      final response = await dio.get(
+        url,
+      );
+
+      final placeDetails = PlaceDetails.fromJson(response.data);
+
+      prediction.lat = placeDetails.result?.geometry?.location?.lat.toString();
+      prediction.lng = placeDetails.result?.geometry?.location?.lng.toString();
+
+      return prediction;
+    } catch (e) {
+      return prediction;
+    }
   }
 
   static const predictionHistoryKey = "predictionHistory";

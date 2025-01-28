@@ -87,11 +87,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 countries: const ['FR'],
                 onOptionSelected: (option) {
-                  log('onOptionSelected: ${option.description}');
+                  log('onOptionSelected: ${option.toJson()}');
                   setState(() {
                     _selectedPlace = option.description ?? '';
                   });
                 },
+                incudeLatLng: true,
                 enableHistory: true,
                 liteModeHistory: true,
               ),

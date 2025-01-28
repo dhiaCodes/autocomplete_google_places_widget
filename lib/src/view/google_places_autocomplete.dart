@@ -58,6 +58,10 @@ class GPlacesAutoComplete extends StatefulWidget {
   /// The countries to restrict the search to (two-character region code).
   final List<String>? countries;
 
+  /// If true, the predictions will include the latitude and longitude of the
+  /// place (an additional API request will be made to get the lat/lng).
+  final bool incudeLatLng;
+
   /// The maximum height of the options menu.
   final double optionsMaxHeight;
 
@@ -128,6 +132,7 @@ class GPlacesAutoComplete extends StatefulWidget {
       this.focusNode,
       this.debounceTime = 500,
       this.countries,
+      this.incudeLatLng = false,
       this.optionsMaxHeight = 275,
       this.optionsMaxWidth,
       this.textFormFieldBuilder,
@@ -290,8 +295,15 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
                       return widget.menuOptionBuilder
                               ?.call(context, index, prediction) ??
                           ListTile(
-                            onTap: () {
+                            onTap: () async {
                               onSelected(prediction);
+                              if (widget.incudeLatLng) {
+                                await GooglePlacesService
+                                    .getPlaceDetailsFromPlaceId(
+                                  prediction,
+                                  widget.googleAPIKey,
+                                );
+                              }
                               widget.onOptionSelected?.call(prediction);
                               addPredictionToHistoryCallBack(prediction);
                             },
@@ -330,8 +342,11 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
     try {
       widget.loadingCallback?.call(true);
       PlaceAutocompleteResponse response =
-          await GooglePlacesService.fetchPlaces(query, widget.googleAPIKey,
-              countries: widget.countries);
+          await GooglePlacesService.fetchPlaces(
+        query,
+        widget.googleAPIKey,
+        countries: widget.countries,
+      );
 
       return response.predictions ?? [];
     } on Exception {
