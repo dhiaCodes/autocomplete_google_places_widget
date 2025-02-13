@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:autocomplete_google_places_widget/src/models/place_details.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,11 +14,12 @@ class GooglePlacesService {
 
   static Future<PlaceAutocompleteResponse> fetchPlaces(
     String text,
-    String googleAPIKey, {
+    String? googleAPIKey, {
     String? proxyURL,
     List<String>? countries,
     bool useSessionToken = true,
     bool useNewPlacesAPI = false,
+    List<String> types = const [],
   }) async {
     final prefix = proxyURL ?? "";
     final Dio dio = Dio();
@@ -42,16 +44,22 @@ class GooglePlacesService {
       if (sessionToken != null) {
         requestBody["sessionToken"] = sessionToken;
       }
-      Options options = Options(
-        headers: {"X-Goog-Api-Key": googleAPIKey},
-      );
-      final response =
-          await dio.post(url, options: options, data: jsonEncode(requestBody));
+      if (types.isNotEmpty) {
+        requestBody["types"] = types;
+      }
+
+      final response = await dio.post(url,
+          options: googleAPIKey != null
+              ? Options(
+                  headers: {"X-Goog-Api-Key": googleAPIKey},
+                )
+              : null,
+          data: jsonEncode(requestBody));
       subscriptionResponse =
           PlaceAutocompleteResponse.fromJsonNewApi(response.data);
     } else {
       String url =
-          "${prefix}https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$text&key=$googleAPIKey";
+          "${prefix}https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$text${googleAPIKey != null ? "&key=$googleAPIKey" : ""}";
 
       if (countries != null) {
         for (int i = 0; i < countries.length; i++) {
@@ -64,6 +72,11 @@ class GooglePlacesService {
           }
         }
       }
+
+      if (types.isNotEmpty) {
+        url += "&types=${types.join('|')}";
+      }
+
       if (sessionToken != null) {
         url += "&sessiontoken=$sessionToken";
       }
@@ -78,7 +91,7 @@ class GooglePlacesService {
 
   static Future<Prediction> getPlaceDetailsFromPlaceId(
     Prediction prediction,
-    String googleAPIKey, {
+    String? googleAPIKey, {
     String? proxyURL,
   }) async {
     try {
@@ -86,7 +99,7 @@ class GooglePlacesService {
       final Dio dio = Dio();
 
       final url =
-          "${prefix}https://maps.googleapis.com/maps/api/place/details/json?placeid=${prediction.placeId}&key=$googleAPIKey";
+          "${prefix}https://maps.googleapis.com/maps/api/place/details/json?placeid=${prediction.placeId}${googleAPIKey != null ? "&key=$googleAPIKey" : ""}";
       final response = await dio.get(
         url,
       );

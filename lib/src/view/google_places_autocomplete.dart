@@ -15,7 +15,7 @@ import 'package:flutter/scheduler.dart';
 /// [menuOptionBuilder] parameters.
 class GPlacesAutoComplete extends StatefulWidget {
   /// The Google API key to use for the Places API.
-  final String googleAPIKey;
+  final String? googleAPIKey;
 
   /// A callback that is called when the user selects an option.
   final void Function(Prediction)? onOptionSelected;
@@ -119,33 +119,45 @@ class GPlacesAutoComplete extends StatefulWidget {
   /// _yourErrorMsgVariable = null;
   /// });
   /// }
-  final void Function(bool apiExceptionCallback)? apiExceptionCallback;
+  final void Function(Object apiExceptionCallback)? apiExceptionCallback;
+
+  /// The types of place results to return.
+  /// If null, all types will be returned.
+  /// See https://developers.google.com/places/web-service/supported_types
+  final List<String> placeTypes;
+
+  /// The proxy URL to use for the API request.
+  /// This can be used to bypass CORS restrictions.
+  /// Example: "https://cors-anywhere.herokuapp.com/"
+  final String? proxyURL;
 
   /// Creates a new Google Places Autocomplete widget.
   /// The [googleAPIKey] parameter is required.
-  const GPlacesAutoComplete(
-      {super.key,
-      required this.googleAPIKey,
-      this.onOptionSelected,
-      this.menuOptionBuilder,
-      this.textEditingController,
-      this.focusNode,
-      this.debounceTime = 500,
-      this.countries,
-      this.incudeLatLng = false,
-      this.optionsMaxHeight = 275,
-      this.optionsMaxWidth,
-      this.textFormFieldBuilder,
-      this.menuBuilder,
-      this.enableHistory = false,
-      this.liteModeHistory = false,
-      this.denseMenuOption = true,
-      this.menuColor,
-      this.menuElevation = 2.0,
-      this.menuBorderRadius = 8.0,
-      this.loadingCallback,
-      this.apiExceptionCallback})
-      : assert((focusNode == null) == (textEditingController == null));
+  const GPlacesAutoComplete({
+    super.key,
+    this.googleAPIKey,
+    this.onOptionSelected,
+    this.menuOptionBuilder,
+    this.textEditingController,
+    this.focusNode,
+    this.debounceTime = 500,
+    this.countries,
+    this.incudeLatLng = false,
+    this.optionsMaxHeight = 275,
+    this.optionsMaxWidth,
+    this.textFormFieldBuilder,
+    this.menuBuilder,
+    this.enableHistory = false,
+    this.liteModeHistory = false,
+    this.denseMenuOption = true,
+    this.menuColor,
+    this.menuElevation = 2.0,
+    this.menuBorderRadius = 8.0,
+    this.loadingCallback,
+    this.apiExceptionCallback,
+    this.placeTypes = const [],
+    this.proxyURL,
+  }) : assert((focusNode == null) == (textEditingController == null));
 
   @override
   State<GPlacesAutoComplete> createState() => _GPlacesAutoCompleteState();
@@ -190,6 +202,7 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
   }
 
   List<Prediction> _predictionsHistory = [];
+
   Future<void> getPredictionsHistory() async {
     if (!widget.enableHistory) {
       return;
@@ -337,8 +350,6 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
     if (query == '') {
       return const Iterable<Prediction>.empty();
     }
-    widget.apiExceptionCallback?.call(false);
-
     try {
       widget.loadingCallback?.call(true);
       PlaceAutocompleteResponse response =
@@ -346,15 +357,15 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
         query,
         widget.googleAPIKey,
         countries: widget.countries,
+        types: widget.placeTypes,
+        proxyURL: widget.proxyURL,
       );
 
       return response.predictions ?? [];
-    } on Exception {
-      widget.apiExceptionCallback?.call(true);
+    } catch (e) {
+      widget.apiExceptionCallback?.call(e);
 
       return [];
-    } finally {
-      widget.loadingCallback?.call(false);
     }
   }
 
