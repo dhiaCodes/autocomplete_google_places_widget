@@ -60,7 +60,7 @@ class GPlacesAutoComplete extends StatefulWidget {
 
   /// If true, the predictions will include the latitude and longitude of the
   /// place (an additional API request will be made to get the lat/lng).
-  final bool incudeLatLng;
+  final bool includeLatLng;
 
   /// The maximum height of the options menu.
   final double optionsMaxHeight;
@@ -142,7 +142,7 @@ class GPlacesAutoComplete extends StatefulWidget {
     this.focusNode,
     this.debounceTime = 500,
     this.countries,
-    this.incudeLatLng = false,
+    this.includeLatLng = false,
     this.optionsMaxHeight = 275,
     this.optionsMaxWidth,
     this.textFormFieldBuilder,
@@ -310,11 +310,12 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
                           ListTile(
                             onTap: () async {
                               onSelected(prediction);
-                              if (widget.incudeLatLng) {
+                              if (widget.includeLatLng) {
                                 await GooglePlacesService
                                     .getPlaceDetailsFromPlaceId(
                                   prediction,
                                   widget.googleAPIKey,
+                                  proxyURL: widget.proxyURL,
                                 );
                               }
                               widget.onOptionSelected?.call(prediction);

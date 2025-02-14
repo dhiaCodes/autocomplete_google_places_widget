@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:autocomplete_google_places_widget/autocomplete_google_places_widget.dart';
 import 'package:flutter/material.dart';
-import '.env';
 
 void main() {
   runApp(const MyApp());
@@ -32,7 +31,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final _yourGoogleAPIKey = apiKey; // fill with your Google API Key
+  final _yourGoogleAPIKey = ""; // fill with your Google API Key
 
   final TextEditingController _textEditingController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
@@ -85,16 +84,21 @@ class _MyHomePageState extends State<MyHomePage> {
                     isLoading = loading;
                   });
                 },
-                countries: const ['FR'],
+                countries: const ['US'],
                 onOptionSelected: (option) {
                   log('onOptionSelected: ${option.toJson()}');
                   setState(() {
                     _selectedPlace = option.description ?? '';
                   });
                 },
-                incudeLatLng: true,
+                includeLatLng: true,
                 enableHistory: true,
                 liteModeHistory: true,
+                proxyURL: 'https://cors-anywhere.herokuapp.com/',
+                placeTypes: ['(cities)'],
+                apiExceptionCallback: (e) {
+                  log('apiExceptionCallback: $e');
+                },
               ),
             ],
           ),
