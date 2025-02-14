@@ -72,7 +72,7 @@ class GooglePlacesService {
       }
 
       if (types.isNotEmpty) {
-        url += "&types=${types.join('|')}";
+        url += "&includedPrimaryTypes=${types.join('|')}";
       }
 
       if (sessionToken != null) {
