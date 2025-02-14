@@ -15,7 +15,7 @@ import 'package:flutter/scheduler.dart';
 /// [menuOptionBuilder] parameters.
 class GPlacesAutoComplete extends StatefulWidget {
   /// The Google API key to use for the Places API.
-  final String? googleAPIKey;
+  final String googleAPIKey;
 
   /// A callback that is called when the user selects an option.
   final void Function(Prediction)? onOptionSelected;
@@ -92,37 +92,24 @@ class GPlacesAutoComplete extends StatefulWidget {
   ///
   /// Example:
   /// ```dart
-  /// loadingCallback: (bool loading) {
-  ///  if (loading) {
-  ///   setState(() {
-  ///   _yourLoadingVariable = true;
-  ///  });
-  /// } else {
-  ///  setState(() {
-  ///  _yourLoadingVariable = false;
-  /// });
-  /// }
+  /// loadingCallback: (bool loading) => setState(() => _yourLoadingVariable = loading),
+  /// ```
   final void Function(bool loading)? loadingCallback;
 
   /// A callback that is called when an API exception occurs.
   /// This can be used to show an error message.
   ///
+  ///
   /// Example:
   /// ```dart
-  /// apiExceptionCallback: (bool apiException) {
-  ///  if (apiException) {
-  ///   setState(() {
-  ///  _yourErrorMsgVariable = "An error occurred while searching for places".
-  ///  });
-  /// } else {
-  ///  setState(() {
-  /// _yourErrorMsgVariable = null;
-  /// });
-  /// }
-  final void Function(Object apiExceptionCallback)? apiExceptionCallback;
+  /// apiExceptionCallback: (Object? e) {
+  /// ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred: $e')));
+  /// },
+  ///  ```
+  final void Function(Object? apiExceptionCallback)? apiExceptionCallback;
 
   /// The types of place results to return.
-  /// If null, all types will be returned.
+  /// If empty, all types will be returned.
   /// See https://developers.google.com/places/web-service/supported_types
   final List<String> placeTypes;
 
@@ -135,7 +122,7 @@ class GPlacesAutoComplete extends StatefulWidget {
   /// The [googleAPIKey] parameter is required.
   const GPlacesAutoComplete({
     super.key,
-    this.googleAPIKey,
+    required this.googleAPIKey,
     this.onOptionSelected,
     this.menuOptionBuilder,
     this.textEditingController,
@@ -352,6 +339,9 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
       return const Iterable<Prediction>.empty();
     }
     try {
+      // Ensure previous API exceptions are cleared
+      widget.apiExceptionCallback?.call(null);
+      // Show loading indicator
       widget.loadingCallback?.call(true);
       PlaceAutocompleteResponse response =
           await GooglePlacesService.fetchPlaces(

@@ -95,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 enableHistory: true,
                 liteModeHistory: true,
                 proxyURL: 'https://cors-anywhere.herokuapp.com/',
-                placeTypes: ['(cities)'],
+                placeTypes: const ['(cities)'],
                 apiExceptionCallback: (e) {
                   log('apiExceptionCallback: $e');
                 },

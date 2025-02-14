@@ -14,7 +14,7 @@ class GooglePlacesService {
 
   static Future<PlaceAutocompleteResponse> fetchPlaces(
     String text,
-    String? googleAPIKey, {
+    String googleAPIKey, {
     String? proxyURL,
     List<String>? countries,
     bool useSessionToken = true,
@@ -45,21 +45,19 @@ class GooglePlacesService {
         requestBody["sessionToken"] = sessionToken;
       }
       if (types.isNotEmpty) {
-        requestBody["types"] = types;
+        requestBody["includedPrimaryTypes"] = types;
       }
 
       final response = await dio.post(url,
-          options: googleAPIKey != null
-              ? Options(
-                  headers: {"X-Goog-Api-Key": googleAPIKey},
-                )
-              : null,
+          options: Options(
+            headers: {"X-Goog-Api-Key": googleAPIKey},
+          ),
           data: jsonEncode(requestBody));
       subscriptionResponse =
           PlaceAutocompleteResponse.fromJsonNewApi(response.data);
     } else {
       String url =
-          "${prefix}https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$text${googleAPIKey != null ? "&key=$googleAPIKey" : ""}";
+          "${prefix}https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$text&key=$googleAPIKey";
 
       if (countries != null) {
         for (int i = 0; i < countries.length; i++) {
