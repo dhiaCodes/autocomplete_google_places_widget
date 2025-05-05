@@ -39,8 +39,8 @@ class GPlacesAutoComplete extends StatefulWidget {
       Iterable<Prediction> options)? menuBuilder;
 
   /// A builder for a single option view in the menu.
-  final Widget Function(BuildContext context, int index, Prediction prediction)?
-      menuOptionBuilder;
+  final Widget Function(BuildContext context, int index, Prediction prediction,
+      void Function()? onTap)? menuOptionBuilder;
 
   /// The controller for the text field.
   /// If this parameter is not null, then [focusNode] must also be not null.
@@ -292,22 +292,27 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
                           Scrollable.ensureVisible(context, alignment: 0.5);
                         }, debugLabel: 'AutocompleteOptions.ensureVisible');
                       }
-                      return widget.menuOptionBuilder
-                              ?.call(context, index, prediction) ??
+                      onTap() async {
+                        onSelected(prediction);
+                        if (widget.includeLatLng) {
+                          await GooglePlacesService.getPlaceDetailsFromPlaceId(
+                            prediction,
+                            widget.googleAPIKey,
+                            proxyURL: widget.proxyURL,
+                          );
+                        }
+                        widget.onOptionSelected?.call(prediction);
+                        addPredictionToHistoryCallBack(prediction);
+                      }
+
+                      return widget.menuOptionBuilder?.call(
+                            context,
+                            index,
+                            prediction,
+                            onTap,
+                          ) ??
                           ListTile(
-                            onTap: () async {
-                              onSelected(prediction);
-                              if (widget.includeLatLng) {
-                                await GooglePlacesService
-                                    .getPlaceDetailsFromPlaceId(
-                                  prediction,
-                                  widget.googleAPIKey,
-                                  proxyURL: widget.proxyURL,
-                                );
-                              }
-                              widget.onOptionSelected?.call(prediction);
-                              addPredictionToHistoryCallBack(prediction);
-                            },
+                            onTap: onTap,
                             tileColor:
                                 highlight ? Theme.of(context).focusColor : null,
                             shape: RoundedRectangleBorder(
@@ -357,6 +362,9 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
       widget.apiExceptionCallback?.call(e);
 
       return [];
+    } finally {
+      // Hide loading indicator
+      widget.loadingCallback?.call(false);
     }
   }
 
