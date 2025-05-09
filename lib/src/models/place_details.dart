@@ -76,7 +76,7 @@ class Result {
     placeId = json['place_id'];
     reference = json['reference'];
     scope = json['scope'];
-    types = json['types'].cast<String>();
+    types = (json['types'] ?? []).cast<String>();
     url = json['url'];
     utcOffset = json['utc_offset'];
     vicinity = json['vicinity'];
