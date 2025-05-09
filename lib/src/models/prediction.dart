@@ -1,3 +1,5 @@
+import 'package:autocomplete_google_places_widget/src/models/place_details.dart';
+
 import 'matched_substrings.dart';
 import 'structured_formatting.dart';
 import 'term.dart';
@@ -11,22 +13,36 @@ class Prediction {
   StructuredFormatting? structuredFormatting;
   List<Term>? terms;
   List<String>? types;
-  String? lat;
-  String? lng;
+  PlaceDetails? details;
 
-  bool get hasLatLng => lat != null && lng != null;
+  bool get hasLatLng =>
+      details?.result?.geometry?.location?.lat != null &&
+      details?.result?.geometry?.location?.lng != null;
 
-  Prediction(
-      {this.description,
-      this.id,
-      this.matchedSubstrings,
-      this.placeId,
-      this.reference,
-      this.structuredFormatting,
-      this.terms,
-      this.types,
-      this.lat,
-      this.lng});
+  String? get getPostalCode {
+    List<AddressComponents> addressComponents =
+        details?.result?.addressComponents ?? [];
+
+    for (final component in addressComponents) {
+      if (component.types?.contains('postal_code') == true) {
+        return component.longName;
+      }
+    }
+
+    return null;
+  }
+
+  Prediction({
+    this.description,
+    this.id,
+    this.matchedSubstrings,
+    this.placeId,
+    this.reference,
+    this.structuredFormatting,
+    this.terms,
+    this.types,
+    this.details,
+  });
 
   Prediction.fromJson(Map<String, dynamic> json) {
     description = json['description'];
@@ -49,8 +65,6 @@ class Prediction {
       });
     }
     types = json['types']?.cast<String>();
-    lat = json['lat'];
-    lng = json['lng'];
   }
   Prediction.fromJsonNewApi(Map<String, dynamic> json) {
     placeId = json['placeId'];
@@ -59,8 +73,6 @@ class Prediction {
         ? StructuredFormatting.fromJsonNewApi(json['structuredFormat'])
         : null;
     types = json['types'].cast<String>();
-    lat = json['lat'];
-    lng = json['lng'];
   }
 
   Map<String, dynamic> toJson() {
@@ -80,8 +92,8 @@ class Prediction {
       data['terms'] = terms!.map((v) => v.toJson()).toList();
     }
     data['types'] = types;
-    data['lat'] = lat;
-    data['lng'] = lng;
+
+    data['details'] = details?.toJson();
 
     return data;
   }
