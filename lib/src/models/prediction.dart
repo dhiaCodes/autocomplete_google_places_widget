@@ -19,6 +19,14 @@ class Prediction {
       details?.result?.geometry?.location?.lat != null &&
       details?.result?.geometry?.location?.lng != null;
 
+  double? get lat {
+    return details?.result?.geometry?.location?.lat;
+  }
+
+  double? get lng {
+    return details?.result?.geometry?.location?.lng;
+  }
+
   String? get getPostalCode {
     List<AddressComponents> addressComponents =
         details?.result?.addressComponents ?? [];
