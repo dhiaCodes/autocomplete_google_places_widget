@@ -89,7 +89,7 @@ class GooglePlacesService {
 
   static Future<Prediction> getPlaceDetailsFromPlaceId(
     Prediction prediction,
-    String? googleAPIKey, {
+    String googleAPIKey, {
     String? proxyURL,
   }) async {
     try {
@@ -97,18 +97,19 @@ class GooglePlacesService {
       final Dio dio = Dio();
 
       final url =
-          "${prefix}https://maps.googleapis.com/maps/api/place/details/json?placeid=${prediction.placeId}${googleAPIKey != null ? "&key=$googleAPIKey" : ""}";
+          "${prefix}https://maps.googleapis.com/maps/api/place/details/json?placeid=${prediction.placeId}&fields=address_components,geometry&key=$googleAPIKey";
       final response = await dio.get(
         url,
       );
-
+      log("${response.data}");
       final placeDetails = PlaceDetails.fromJson(response.data);
+      log("getPlaceDetailsFromPlaceId: ${placeDetails.result?.toJson()}");
 
-      prediction.lat = placeDetails.result?.geometry?.location?.lat.toString();
-      prediction.lng = placeDetails.result?.geometry?.location?.lng.toString();
+      prediction.details = placeDetails;
 
       return prediction;
     } catch (e) {
+      log("Error fetching place details: $e");
       return prediction;
     }
   }
