@@ -21,70 +21,78 @@ class GooglePlacesService {
     bool useNewPlacesAPI = false,
     List<String> types = const [],
   }) async {
-    final prefix = proxyURL ?? "";
-    final Dio dio = Dio();
+    try {
+      final prefix = proxyURL ?? "";
+      final Dio dio = Dio();
 
-    PlaceAutocompleteResponse subscriptionResponse;
+      PlaceAutocompleteResponse subscriptionResponse;
 
-    if (useSessionToken && sessionToken == null) {
-      var uuid = const Uuid();
-      sessionToken = uuid.v4();
-    }
-    log("Inside getLocation: $text");
-
-    if (useNewPlacesAPI) {
-      String url =
-          "${prefix}https://places.googleapis.com/v1/places:autocomplete";
-
-      Map<String, dynamic> requestBody = {"input": text};
-
-      if (countries != null) {
-        requestBody["includedRegionCodes"] = countries;
+      if (useSessionToken && sessionToken == null) {
+        var uuid = const Uuid();
+        sessionToken = uuid.v4();
       }
-      if (sessionToken != null) {
-        requestBody["sessionToken"] = sessionToken;
-      }
-      if (types.isNotEmpty) {
-        requestBody["includedPrimaryTypes"] = types;
-      }
+      log("Inside getLocation: $text");
 
-      final response = await dio.post(url,
-          options: Options(
-            headers: {"X-Goog-Api-Key": googleAPIKey},
-          ),
-          data: jsonEncode(requestBody));
-      subscriptionResponse =
-          PlaceAutocompleteResponse.fromJsonNewApi(response.data);
-    } else {
-      String url =
-          "${prefix}https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$text&key=$googleAPIKey";
+      if (useNewPlacesAPI) {
+        String url =
+            "${prefix}https://places.googleapis.com/v1/places:autocomplete";
 
-      if (countries != null) {
-        for (int i = 0; i < countries.length; i++) {
-          final country = countries[i];
+        Map<String, dynamic> requestBody = {"input": text};
 
-          if (i == 0) {
-            url = "$url&components=country:$country";
-          } else {
-            url = "$url|country:$country";
+        if (countries != null) {
+          requestBody["includedRegionCodes"] = countries;
+        }
+        if (sessionToken != null) {
+          requestBody["sessionToken"] = sessionToken;
+        }
+        if (types.isNotEmpty) {
+          requestBody["includedPrimaryTypes"] = types;
+        }
+
+        final response = await dio.post(url,
+            options: Options(
+              headers: {"X-Goog-Api-Key": googleAPIKey},
+            ),
+            data: jsonEncode(requestBody));
+        subscriptionResponse =
+            PlaceAutocompleteResponse.fromJsonNewApi(response.data);
+      } else {
+        String url =
+            "${prefix}https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$text&key=$googleAPIKey";
+
+        if (countries != null) {
+          for (int i = 0; i < countries.length; i++) {
+            final country = countries[i];
+
+            if (i == 0) {
+              url = "$url&components=country:$country";
+            } else {
+              url = "$url|country:$country";
+            }
           }
         }
+
+        if (types.isNotEmpty) {
+          url += "&includedPrimaryTypes=${types.join('|')}";
+        }
+
+        if (sessionToken != null) {
+          url += "&sessiontoken=$sessionToken";
+        }
+        log("sessionToken: $sessionToken");
+        final response = await dio.get(url);
+        subscriptionResponse =
+            PlaceAutocompleteResponse.fromJson(response.data);
       }
 
-      if (types.isNotEmpty) {
-        url += "&includedPrimaryTypes=${types.join('|')}";
-      }
-
-      if (sessionToken != null) {
-        url += "&sessiontoken=$sessionToken";
-      }
-      log("sessionToken: $sessionToken");
-      final response = await dio.get(url);
-
-      subscriptionResponse = PlaceAutocompleteResponse.fromJson(response.data);
+      return subscriptionResponse;
+    } on DioException catch (e) {
+      log("Error fetching places: $e");
+      rethrow;
+    } catch (e) {
+      log("Error fetching places: $e");
+      rethrow;
     }
-
-    return subscriptionResponse;
   }
 
   static Future<Prediction> getPlaceDetailsFromPlaceId(
