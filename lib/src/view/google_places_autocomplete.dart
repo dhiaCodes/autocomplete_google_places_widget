@@ -213,13 +213,14 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
     }
     _predictionsHistory.add(prediction);
     log("prediction added to history: $prediction");
-    GooglePlacesService.savePrediction(prediction,
-        liteMode: widget.liteModeHistory);
+    GooglePlacesService.instance
+        .savePrediction(prediction, liteMode: widget.liteModeHistory);
   }
 
   @override
   void initState() {
     super.initState();
+    GooglePlacesService.instance.initialize();
     _debouncedSearch = debounce<Iterable<Prediction>?, String>(_search,
         debounceDuration: Duration(milliseconds: widget.debounceTime));
     getPredictionsHistory();
@@ -295,7 +296,8 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
                       onTap() async {
                         onSelected(prediction);
                         if (widget.includeLatLng) {
-                          await GooglePlacesService.getPlaceDetailsFromPlaceId(
+                          await GooglePlacesService.instance
+                              .getPlaceDetailsFromPlaceId(
                             prediction,
                             widget.googleAPIKey,
                             proxyURL: widget.proxyURL,
@@ -349,7 +351,7 @@ class _GPlacesAutoCompleteState extends State<GPlacesAutoComplete> {
       // Show loading indicator
       widget.loadingCallback?.call(true);
       PlaceAutocompleteResponse response =
-          await GooglePlacesService.fetchPlaces(
+          await GooglePlacesService.instance.fetchPlaces(
         query,
         widget.googleAPIKey,
         countries: widget.countries,

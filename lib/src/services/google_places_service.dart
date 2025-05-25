@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:autocomplete_google_places_widget/src/models/place_details.dart';
 import 'package:dio/dio.dart';
+import 'package:google_api_headers/google_api_headers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -10,9 +11,27 @@ import '../models/place_autocomplete_response.dart';
 import '../models/prediction.dart';
 
 class GooglePlacesService {
-  static String? sessionToken;
+  GooglePlacesService._privateConstructor();
+  static final GooglePlacesService _instance =
+      GooglePlacesService._privateConstructor();
 
-  static Future<PlaceAutocompleteResponse> fetchPlaces(
+  static GooglePlacesService get instance => _instance;
+
+  Map<String, String> _gmApiHeaders = {};
+
+  ///  Getting the headers required to call Google APIs with an app restricted API key.
+  void initialize() async {
+    _gmApiHeaders = await const GoogleApiHeaders().getHeaders();
+    log('GoogleApiHeaders: $_gmApiHeaders');
+    assert(
+      _gmApiHeaders.isNotEmpty,
+      'Google API headers should not be empty',
+    );
+  }
+
+  String? sessionToken;
+
+  Future<PlaceAutocompleteResponse> fetchPlaces(
     String text,
     String googleAPIKey, {
     String? proxyURL,
@@ -51,7 +70,7 @@ class GooglePlacesService {
 
         final response = await dio.post(url,
             options: Options(
-              headers: {"X-Goog-Api-Key": googleAPIKey},
+              headers: _gmApiHeaders..addAll({"X-Goog-Api-Key": googleAPIKey}),
             ),
             data: jsonEncode(requestBody));
         subscriptionResponse =
@@ -80,7 +99,10 @@ class GooglePlacesService {
           url += "&sessiontoken=$sessionToken";
         }
         log("sessionToken: $sessionToken");
-        final response = await dio.get(url);
+        final response = await dio.get(
+          url,
+          options: Options(headers: _gmApiHeaders),
+        );
         subscriptionResponse =
             PlaceAutocompleteResponse.fromJson(response.data);
       }
@@ -95,7 +117,7 @@ class GooglePlacesService {
     }
   }
 
-  static Future<Prediction> getPlaceDetailsFromPlaceId(
+  Future<Prediction> getPlaceDetailsFromPlaceId(
     Prediction prediction,
     String googleAPIKey, {
     String? proxyURL,
@@ -108,6 +130,7 @@ class GooglePlacesService {
           "${prefix}https://maps.googleapis.com/maps/api/place/details/json?placeid=${prediction.placeId}&fields=address_components,geometry&key=$googleAPIKey";
       final response = await dio.get(
         url,
+        options: Options(headers: _gmApiHeaders),
       );
       log("${response.data}");
       final placeDetails = PlaceDetails.fromJson(response.data);
@@ -125,8 +148,7 @@ class GooglePlacesService {
   static const predictionHistoryKey = "predictionHistory";
 
   /// [Prediction] will be saved in shared preferences
-  static Future<void> savePrediction(Prediction prediction,
-      {bool? liteMode}) async {
+  Future<void> savePrediction(Prediction prediction, {bool? liteMode}) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final json = prediction.toJson();
 
